@@ -1,0 +1,1694 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-950 text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bolos 3D Pro - Reposición Oficial</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+            overflow-x: hidden;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #f59e0b;
+            border-radius: 4px;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.9; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.03); }
+        }
+
+        .pulse-banner {
+            animation: pulseGlow 1.2s infinite ease-in-out;
+        }
+
+        .animate-spin-slow {
+            animation: spin 3s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="min-h-full flex flex-col justify-between bg-slate-950 text-slate-100">
+
+    <!-- Header Navigation -->
+    <header class="w-full bg-slate-900/95 backdrop-blur border-b border-slate-800 sticky top-0 z-30 px-3 py-2.5 sm:px-6 shadow-xl">
+        <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 via-orange-500 to-red-600 flex items-center justify-center shadow-lg shadow-amber-500/20">
+                    <i class="fa-solid fa-bowling-ball text-2xl text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-black tracking-wider bg-gradient-to-r from-amber-400 via-orange-400 to-red-500 bg-clip-text text-transparent">
+                        BOLOS PRO 3D
+                    </h1>
+                    <p class="text-[10px] sm:text-xs text-slate-400 font-semibold">Reglamento Oficial & Reposición Automatizada</p>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+                <!-- Manual Reset Button -->
+                <button id="btnManualReset" title="Forzar colocación de 10 bolos nuevos" class="px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 active:bg-amber-500/40 text-amber-300 border border-amber-500/40 rounded-lg text-xs font-extrabold transition flex items-center gap-1.5 shadow-md">
+                    <i class="fa-solid fa-rotate text-amber-400"></i>
+                    <span>Reponer 10 Bolos</span>
+                </button>
+
+                <button id="btnSoundToggle" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 active:bg-slate-900 text-slate-200 rounded-lg text-xs font-bold transition flex items-center gap-1.5 border border-slate-700">
+                    <i id="soundIcon" class="fa-solid fa-volume-high text-amber-400"></i>
+                    <span class="hidden sm:inline">Sonido</span>
+                </button>
+                <button id="btnSettings" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 active:bg-slate-900 text-slate-200 rounded-lg text-xs font-bold transition flex items-center gap-1.5 border border-slate-700">
+                    <i class="fa-solid fa-sliders text-blue-400"></i>
+                    <span class="hidden sm:inline">Ajustes</span>
+                </button>
+                <button id="btnHelp" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 active:bg-slate-900 text-slate-200 rounded-lg text-xs font-bold transition flex items-center gap-1.5 border border-slate-700">
+                    <i class="fa-solid fa-circle-question text-emerald-400"></i>
+                    <span class="hidden sm:inline">Reglas</span>
+                </button>
+                <button id="btnRestart" class="px-3 py-1.5 bg-red-600 hover:bg-red-500 active:bg-red-700 text-white rounded-lg text-xs font-black shadow-md transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-power-off"></i>
+                    <span>Reiniciar</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto p-2 sm:p-4 flex flex-col gap-3">
+        
+        <!-- Scorecard Panel -->
+        <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 shadow-2xl backdrop-blur">
+            <div class="flex justify-between items-center mb-2 px-1">
+                <div class="flex items-center gap-3">
+                    <span id="playerBadge" class="px-3 py-1 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-full text-xs font-extrabold uppercase tracking-wider flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
+                        <span id="turnText">Turno: Jugador 1</span>
+                    </span>
+                    <span class="text-xs font-bold text-slate-300">
+                        Frame <span id="frameNumber" class="text-amber-400 font-extrabold">1</span> / 10
+                    </span>
+                    <span id="shotBadge" class="text-xs font-bold px-2 py-0.5 bg-slate-800 text-slate-300 rounded border border-slate-700">
+                        Tiro <span id="shotNumber" class="text-amber-400">1</span>
+                    </span>
+                </div>
+                <div id="statusMessage" class="text-xs sm:text-sm font-semibold text-slate-400 truncate max-w-[200px] sm:max-w-none">
+                    Listo para lanzar. Ajusta la posición de inicio.
+                </div>
+            </div>
+
+            <!-- Scorecard Table -->
+            <div class="overflow-x-auto custom-scrollbar pb-1">
+                <div id="scorecardTable" class="min-w-[720px] flex flex-col gap-2">
+                    <!-- Dynamic scorecard rows inserted via JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Canvas Simulation Area -->
+        <section class="relative flex-1 min-h-[420px] sm:min-h-[500px] bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl flex flex-col items-center justify-center">
+            
+            <!-- Canvas Viewport -->
+            <div class="w-full h-full absolute inset-0 flex items-center justify-center p-1">
+                <canvas id="bowlingCanvas" width="800" height="520" class="w-full h-full object-contain block rounded-xl bg-slate-950"></canvas>
+            </div>
+
+            <!-- Pinsetter Status Badge Overlay -->
+            <div id="pinsetterBadge" class="absolute top-3 left-4 z-20 px-3 py-1 bg-slate-900/80 backdrop-blur border border-slate-700/80 rounded-lg text-[11px] font-bold text-slate-300 flex items-center gap-2 shadow-lg">
+                <span id="pinsetterDot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span id="pinsetterStatusText">Elevador de Bolos: Listo (10 Bolos)</span>
+            </div>
+
+            <!-- Dynamic Announcement Banner -->
+            <div id="bannerOverlay" class="absolute inset-0 pointer-events-none flex items-center justify-center hidden z-30 bg-slate-950/40 backdrop-blur-xs">
+                <div id="bannerCard" class="px-8 py-6 rounded-2xl bg-slate-900/95 border-2 border-amber-400 shadow-2xl text-center transform scale-90 transition-all duration-300 pulse-banner">
+                    <h2 id="bannerTitle" class="text-4xl sm:text-6xl font-black tracking-wider bg-gradient-to-r from-amber-300 via-yellow-400 to-orange-500 bg-clip-text text-transparent drop-shadow">
+                        ¡STRIKE!
+                    </h2>
+                    <p id="bannerSub" class="text-xs sm:text-base font-bold text-amber-200 mt-2">
+                        ¡Pleno perfecto en el primer tiro!
+                    </p>
+                </div>
+            </div>
+
+            <!-- Confetti Overlay -->
+            <canvas id="confettiCanvas" width="800" height="520" class="absolute inset-0 pointer-events-none z-20 w-full h-full object-contain"></canvas>
+
+            <!-- Controls Deck -->
+            <div id="controlsOverlay" class="absolute bottom-2 inset-x-2 sm:bottom-4 sm:inset-x-6 z-20 max-w-2xl mx-auto bg-slate-900/90 backdrop-blur-md p-3 sm:p-4 rounded-xl border border-slate-700/80 shadow-2xl flex flex-col gap-3">
+                
+                <div class="flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                        <span id="stepBadge" class="w-7 h-7 rounded-full bg-amber-500 text-slate-950 font-black text-xs flex items-center justify-center shadow">1</span>
+                        <span id="stepText" class="text-xs sm:text-sm font-bold text-slate-200">Ajusta la Posición Inicial</span>
+                    </div>
+
+                    <button id="btnPrimaryAction" class="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 active:scale-95 text-slate-950 font-black rounded-lg text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-amber-500/25 transition-all">
+                        Fijar Posición
+                    </button>
+                </div>
+
+                <!-- Position Slider -->
+                <div id="boxPosition" class="flex flex-col gap-1">
+                    <div class="flex justify-between text-[11px] text-slate-400 font-semibold">
+                        <span>Izquierda</span>
+                        <span class="text-amber-400">Desliza para ubicar la bola</span>
+                        <span>Derecha</span>
+                    </div>
+                    <input type="range" id="sliderPos" min="-65" max="65" value="0" class="w-full h-2.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500">
+                </div>
+
+                <!-- Aim Angle and Power Meters -->
+                <div id="boxAnglePower" class="grid grid-cols-2 gap-3 hidden">
+                    <div class="flex flex-col gap-1">
+                        <div class="flex justify-between text-[11px] text-slate-300 font-semibold">
+                            <span>Dirección / Ángulo</span>
+                            <span id="txtAngle" class="text-amber-400">0°</span>
+                        </div>
+                        <div class="w-full h-3 bg-slate-800 rounded-full overflow-hidden border border-slate-700 relative">
+                            <div id="barAngle" class="h-full bg-gradient-to-r from-blue-500 via-amber-400 to-red-500 transition-all duration-75" style="width: 50%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col gap-1">
+                        <div class="flex justify-between text-[11px] text-slate-300 font-semibold">
+                            <span>Fuerza de Tiro</span>
+                            <span id="txtPower" class="text-red-400">50%</span>
+                        </div>
+                        <div class="w-full h-3 bg-slate-800 rounded-full overflow-hidden border border-slate-700 relative">
+                            <div id="barPower" class="h-full bg-gradient-to-r from-green-500 via-yellow-400 to-red-600 transition-all duration-75" style="width: 50%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hook / Spin Slider -->
+                <div id="boxSpin" class="flex flex-col gap-1 hidden">
+                    <div class="flex justify-between text-[11px] text-slate-300 font-semibold">
+                        <span>Efecto Izquierda (Hook)</span>
+                        <span id="txtSpin" class="text-amber-400 font-bold">Sin efecto (0)</span>
+                        <span>Efecto Derecha</span>
+                    </div>
+                    <input type="range" id="sliderSpin" min="-40" max="40" value="0" class="w-full h-2.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500">
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modals -->
+    <div id="modalSettings" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-5 shadow-2xl flex flex-col gap-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="text-base font-bold text-slate-100 flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-amber-400"></i>
+                    Ajustes de Partida
+                </h3>
+                <button class="btnCloseModal text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-400 mb-1">Modo de Jugadores</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button id="btnMode1P" class="py-2 px-3 rounded-xl border border-amber-500/50 bg-amber-500/10 text-amber-400 font-bold text-xs flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-user"></i> 1 Jugador
+                        </button>
+                        <button id="btnMode2P" class="py-2 px-3 rounded-xl border border-slate-700 bg-slate-800 text-slate-400 font-bold text-xs flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-users"></i> 2 Jugadores
+                        </button>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Nombre Jugador 1</label>
+                        <input type="text" id="inputP1" value="Jugador 1" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div id="p2Group" class="hidden">
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Nombre Jugador 2</label>
+                        <input type="text" id="inputP2" value="Jugador 2" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-400 mb-2">Color de Bola</label>
+                    <div id="colorPicker" class="flex items-center gap-3">
+                        <button data-color="#dc2626" class="w-8 h-8 rounded-full bg-red-600 ring-2 ring-amber-400 shadow-md"></button>
+                        <button data-color="#2563eb" class="w-8 h-8 rounded-full bg-blue-600 shadow-md"></button>
+                        <button data-color="#059669" class="w-8 h-8 rounded-full bg-emerald-600 shadow-md"></button>
+                        <button data-color="#d97706" class="w-8 h-8 rounded-full bg-amber-600 shadow-md"></button>
+                        <button data-color="#7c3aed" class="w-8 h-8 rounded-full bg-purple-600 shadow-md"></button>
+                    </div>
+                </div>
+            </div>
+
+            <button id="btnApplySettings" class="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold rounded-xl text-xs transition shadow-lg">
+                Aplicar y Nueva Partida
+            </button>
+        </div>
+    </div>
+
+    <div id="modalHelp" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-2xl p-5 shadow-2xl flex flex-col gap-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <h3 class="text-base font-bold text-slate-100 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-question text-emerald-400"></i>
+                    Reglas Oficiales de Reposición
+                </h3>
+                <button class="btnCloseModal text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div class="space-y-3 text-xs text-slate-300 leading-relaxed max-h-[60vh] overflow-y-auto">
+                <div class="bg-slate-800/70 p-3 rounded-xl border border-slate-700/50 space-y-1">
+                    <h4 class="font-bold text-amber-400 flex items-center gap-1.5"><i class="fa-solid fa-rotate"></i> Lógica Estricta de Reposición de Bolos:</h4>
+                    <ul class="list-disc list-inside space-y-1 text-slate-300">
+                        <li><b>Tiro 1:</b> Te enfrentas a la formación completa de 10 bolos.</li>
+                        <li><b>Si NO haces Strike:</b> El brazo barredor retira únicamente los bolos caídos. Los bolos que han quedado en pie se mantienen exactamente en su posición para el <b>Tiro 2</b>.</li>
+                        <li><b>Tiro 2:</b> Lanzas contra los bolos restantes. Al terminar el Tiro 2 (o tras un Strike en Tiro 1), el elevador retira todo y <b>coloca SIEMPRE 10 bolos totalmente nuevos</b> para la siguiente entrada o jugador.</li>
+                        <li><b>Frame 10:</b> En la entrada final, un Strike o Spare recarga de inmediato los 10 bolos nuevos para completar los lanzamientos de bonificación.</li>
+                    </ul>
+                </div>
+
+                <div class="bg-slate-800/70 p-3 rounded-xl border border-slate-700/50 space-y-1">
+                    <h4 class="font-bold text-amber-400 flex items-center gap-1.5"><i class="fa-solid fa-gamepad"></i> Controles del juego:</h4>
+                    <ol class="list-decimal list-inside space-y-1">
+                        <li><b>Posición:</b> Desliza la bola a la izquierda/derecha.</li>
+                        <li><b>Ángulo:</b> Presiona el botón para fijar la dirección deseada.</li>
+                        <li><b>Fuerza:</b> Pulsa en el momento adecuado para fijar la velocidad.</li>
+                        <li><b>Efecto (Hook):</b> Ajusta la curva lateral y pulsa <b>LANZAR BOLA</b>.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <button class="btnCloseModal w-full py-2 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl text-xs transition border border-slate-700">
+                Entendido
+            </button>
+        </div>
+    </div>
+
+    <!-- Web Audio Synthesizer -->
+    <script>
+        class SoundSynth {
+            constructor() {
+                this.ctx = null;
+                this.muted = false;
+                this.rollGain = null;
+                this.rollSource = null;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioCtx();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            playClick() {
+                if (this.muted) return;
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(540, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(180, this.ctx.currentTime + 0.04);
+                gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.04);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.04);
+            }
+
+            startRoll() {
+                if (this.muted) return;
+                this.init();
+                this.stopRoll();
+
+                const bufferSize = this.ctx.sampleRate * 2;
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+
+                const noise = this.ctx.createBufferSource();
+                noise.buffer = buffer;
+                noise.loop = true;
+
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(200, this.ctx.currentTime);
+
+                this.rollGain = this.ctx.createGain();
+                this.rollGain.gain.setValueAtTime(0.24, this.ctx.currentTime);
+
+                noise.connect(filter);
+                filter.connect(this.rollGain);
+                this.rollGain.connect(this.ctx.destination);
+
+                noise.start();
+                this.rollSource = noise;
+            }
+
+            stopRoll() {
+                if (this.rollSource) {
+                    try {
+                        this.rollGain.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + 0.08);
+                        setTimeout(() => {
+                            if (this.rollSource) {
+                                this.rollSource.stop();
+                                this.rollSource = null;
+                            }
+                        }, 80);
+                    } catch (e) {
+                        this.rollSource = null;
+                    }
+                }
+            }
+
+            playPinHit(force = 1.0) {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(750 + Math.random() * 250, now);
+                osc.frequency.exponentialRampToValueAtTime(120, now + 0.15);
+
+                gain.gain.setValueAtTime(Math.min(0.48 * force, 0.55), now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.15);
+
+                const bufferSize = this.ctx.sampleRate * 0.12;
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const d = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.22));
+                }
+
+                const noise = this.ctx.createBufferSource();
+                noise.buffer = buffer;
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(1600, now);
+                filter.Q.setValueAtTime(2.2, now);
+
+                const nGain = this.ctx.createGain();
+                nGain.gain.setValueAtTime(Math.min(0.4 * force, 0.45), now);
+                nGain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+
+                noise.connect(filter);
+                filter.connect(nGain);
+                nGain.connect(this.ctx.destination);
+                noise.start(now);
+            }
+
+            playPinsetterMotor() {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(95, now);
+                osc.frequency.linearRampToValueAtTime(135, now + 0.35);
+                osc.frequency.linearRampToValueAtTime(85, now + 0.8);
+
+                gain.gain.setValueAtTime(0.08, now);
+                gain.gain.linearRampToValueAtTime(0.12, now + 0.2);
+                gain.gain.linearRampToValueAtTime(0.001, now + 0.8);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.8);
+            }
+
+            playPinDropThump() {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(45, now + 0.2);
+
+                gain.gain.setValueAtTime(0.38, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            }
+
+            playStrikeFanfare() {
+                if (this.muted) return;
+                this.init();
+                const notes = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99];
+                notes.forEach((f, i) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    const t = this.ctx.currentTime + i * 0.06;
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(f, t);
+                    gain.gain.setValueAtTime(0, t);
+                    gain.gain.linearRampToValueAtTime(0.22, t + 0.02);
+                    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.45);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(t);
+                    osc.stop(t + 0.45);
+                });
+            }
+
+            playSpareFanfare() {
+                if (this.muted) return;
+                this.init();
+                const notes = [330, 440, 554.37, 659.25];
+                notes.forEach((f, i) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    const t = this.ctx.currentTime + i * 0.08;
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(f, t);
+                    gain.gain.setValueAtTime(0.2, t);
+                    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.35);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(t);
+                    osc.stop(t + 0.35);
+                });
+            }
+
+            playGutterThud() {
+                if (this.muted) return;
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(110, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.22);
+                gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.22);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.22);
+            }
+        }
+
+        const audio = new SoundSynth();
+    </script>
+
+    <!-- Scorecard Logic Class -->
+    <script>
+        class Scorecard {
+            constructor(name) {
+                this.name = name;
+                this.reset();
+            }
+
+            reset() {
+                this.frames = Array.from({ length: 10 }, () => ({
+                    rolls: [],
+                    isStrike: false,
+                    isSpare: false,
+                    score: null
+                }));
+                this.currentFrameIdx = 0;
+                this.totalScore = 0;
+                this.isFinished = false;
+            }
+
+            getCurrentFrame() {
+                return this.frames[this.currentFrameIdx];
+            }
+
+            recordRoll(pins) {
+                if (this.isFinished) return;
+
+                const frame = this.frames[this.currentFrameIdx];
+                frame.rolls.push(pins);
+                const rollNum = frame.rolls.length;
+
+                if (this.currentFrameIdx < 9) {
+                    // Frames 1 to 9
+                    if (rollNum === 1 && pins === 10) {
+                        frame.isStrike = true;
+                        this.advanceFrame();
+                    } else if (rollNum === 2) {
+                        if (frame.rolls[0] + frame.rolls[1] === 10) {
+                            frame.isSpare = true;
+                        }
+                        this.advanceFrame();
+                    }
+                } else {
+                    // Frame 10 special logic
+                    const r1 = frame.rolls[0] || 0;
+                    const r2 = frame.rolls[1] || 0;
+
+                    if (rollNum === 1) {
+                        if (r1 === 10) frame.isStrike = true;
+                    } else if (rollNum === 2) {
+                        if (r1 < 10 && r1 + r2 === 10) frame.isSpare = true;
+                        if (!frame.isStrike && !frame.isSpare) {
+                            this.isFinished = true;
+                        }
+                    } else if (rollNum === 3) {
+                        this.isFinished = true;
+                    }
+                }
+
+                this.calculateScores();
+            }
+
+            advanceFrame() {
+                if (this.currentFrameIdx < 9) {
+                    this.currentFrameIdx++;
+                } else {
+                    this.isFinished = true;
+                }
+            }
+
+            calculateScores() {
+                let cumulative = 0;
+
+                for (let i = 0; i < 10; i++) {
+                    const f = this.frames[i];
+                    if (f.rolls.length === 0) {
+                        f.score = null;
+                        continue;
+                    }
+
+                    if (i < 9) {
+                        if (f.isStrike) {
+                            const bonus = this.getBonusRolls(i, 2);
+                            if (bonus !== null) {
+                                cumulative += 10 + bonus;
+                                f.score = cumulative;
+                            } else {
+                                f.score = null;
+                            }
+                        } else if (f.isSpare) {
+                            const bonus = this.getBonusRolls(i, 1);
+                            if (bonus !== null) {
+                                cumulative += 10 + bonus;
+                                f.score = cumulative;
+                            } else {
+                                f.score = null;
+                            }
+                        } else if (f.rolls.length === 2) {
+                            cumulative += f.rolls[0] + f.rolls[1];
+                            f.score = cumulative;
+                        } else {
+                            f.score = null;
+                        }
+                    } else {
+                        // Frame 10
+                        const sum = f.rolls.reduce((a, b) => a + b, 0);
+                        if (f.rolls.length >= 2) {
+                            if (f.isStrike || f.isSpare) {
+                                if (f.rolls.length === 3) {
+                                    cumulative += sum;
+                                    f.score = cumulative;
+                                } else {
+                                    f.score = null;
+                                }
+                            } else {
+                                cumulative += sum;
+                                f.score = cumulative;
+                            }
+                        } else {
+                            f.score = null;
+                        }
+                    }
+                }
+
+                this.totalScore = cumulative;
+            }
+
+            getBonusRolls(fromFrameIdx, count) {
+                const bonusList = [];
+                for (let i = fromFrameIdx + 1; i < 10; i++) {
+                    for (let r of this.frames[i].rolls) {
+                        bonusList.push(r);
+                        if (bonusList.length === count) break;
+                    }
+                    if (bonusList.length === count) break;
+                }
+                if (bonusList.length === count) {
+                    return bonusList.reduce((a, b) => a + b, 0);
+                }
+                return null;
+            }
+        }
+    </script>
+
+    <!-- Main Bowling Game Physics Engine -->
+    <script>
+        class BowlingEngine {
+            constructor(canvas, confettiCanvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.cCanvas = confettiCanvas;
+                this.cCtx = confettiCanvas.getContext('2d');
+
+                this.W = 800;
+                this.H = 520;
+
+                this.players = [new Scorecard('Jugador 1')];
+                this.activePlayerIdx = 0;
+                this.ballColor = '#dc2626';
+
+                // 3D Lane Parameters
+                this.LANE_WIDTH = 150;
+                this.GUTTER_WIDTH = 34;
+                this.LANE_LENGTH = 950;
+
+                // Ball State
+                this.ball = {
+                    x: 0,
+                    y: 18,
+                    z: 0,
+                    vx: 0,
+                    vz: 0,
+                    radius: 18,
+                    spin: 0,
+                    rotation: 0,
+                    isRolling: false,
+                    inGutter: false,
+                    settled: false
+                };
+
+                // Pins State
+                this.pins = [];
+
+                // Pinsetter Machine Animation Engine
+                // Mode: 'IDLE', 'SWEEP_KNOCKED', 'FULL_RESET'
+                this.pinsetter = {
+                    mode: 'IDLE',
+                    stage: 0,
+                    rakeZ: 700,
+                    rackY: 130, // Rack descends from top Y = 130 down to Y = 0
+                    timer: 0
+                };
+
+                // Phase Control:
+                // 0: SET_POS, 1: SET_ANGLE, 2: SET_POWER, 3: SET_SPIN, 4: ROLLING, 5: EVALUATING
+                this.phase = 0;
+                this.aimAngle = 0;
+                this.aimDir = 1;
+                this.powerVal = 50;
+                this.powerDir = 1;
+
+                this.particles = [];
+
+                this.resetPins(true);
+            }
+
+            resetPins(isFullReset) {
+                if (isFullReset) {
+                    const startZ = 800;
+                    const spX = 26;
+                    const spZ = 28;
+
+                    this.pins = [];
+                    let id = 1;
+
+                    const pinRows = [
+                        [{ x: 0, z: startZ }],
+                        [{ x: -spX / 2, z: startZ + spZ }, { x: spX / 2, z: startZ + spZ }],
+                        [{ x: -spX, z: startZ + spZ * 2 }, { x: 0, z: startZ + spZ * 2 }, { x: spX, z: startZ + spZ * 2 }],
+                        [
+                            { x: -spX * 1.5, z: startZ + spZ * 3 },
+                            { x: -spX / 2, z: startZ + spZ * 3 },
+                            { x: spX / 2, z: startZ + spZ * 3 },
+                            { x: spX * 1.5, z: startZ + spZ * 3 }
+                        ]
+                    ];
+
+                    pinRows.forEach(row => {
+                        row.forEach(pos => {
+                            this.pins.push({
+                                id: id++, x: pos.x, y: 0, z: pos.z,
+                                vx: 0, vy: 0, vz: 0, angleX: 0, angleZ: 0,
+                                vAngleX: 0, vAngleZ: 0, radius: 10, height: 38,
+                                isKnocked: false, removed: false
+                            });
+                        });
+                    });
+                } else {
+                    // Strictly keep standing pins; remove only knocked ones
+                    this.pins.forEach(pin => {
+                        if (pin.isKnocked) {
+                            pin.removed = true;
+                        } else {
+                            // Stabilize standing pins
+                            pin.vx = 0; pin.vz = 0; pin.vAngleX = 0; pin.vAngleZ = 0;
+                        }
+                    });
+                }
+            }
+
+            triggerManualReset() {
+                audio.playClick();
+                updatePinsetterStatusBadge("Colocando 10 bolos nuevos...", "amber");
+                this.resetPins(true);
+                this.resetBall();
+                setTimeout(() => updatePinsetterStatusBadge("Elevador: Listo (10 Bolos)", "emerald"), 1000);
+            }
+
+            resetBall() {
+                this.ball.x = 0;
+                this.ball.y = 18;
+                this.ball.z = 0;
+                this.ball.vx = 0;
+                this.ball.vz = 0;
+                this.ball.spin = 0;
+                this.ball.rotation = 0;
+                this.ball.isRolling = false;
+                this.ball.inGutter = false;
+                this.ball.settled = false;
+                this.phase = 0;
+            }
+
+            project(x, y, z) {
+                const camY = 125;
+                const camZ = -190;
+                const focalLength = 310;
+
+                const dz = z - camZ;
+                const scale = focalLength / dz;
+
+                const sx = this.W / 2 + x * scale;
+                const sy = this.H * 0.30 + (camY - y) * scale;
+
+                return { x: sx, y: sy, scale: scale };
+            }
+
+            updatePhysics() {
+                // Control Oscillators
+                if (this.phase === 1) {
+                    this.aimAngle += 0.012 * this.aimDir;
+                    if (this.aimAngle > 0.25 || this.aimAngle < -0.25) this.aimDir *= -1;
+                } else if (this.phase === 2) {
+                    this.powerVal += 2.2 * this.powerDir;
+                    if (this.powerVal >= 100 || this.powerVal <= 10) this.powerDir *= -1;
+                }
+
+                // Ball Movement Physics
+                if (this.ball.isRolling) {
+                    if (!this.ball.inGutter && Math.abs(this.ball.spin) > 0) {
+                        this.ball.vx += (this.ball.spin / 40) * 0.09 * (this.ball.z / 500);
+                    }
+
+                    this.ball.x += this.ball.vx;
+                    this.ball.z += this.ball.vz;
+                    this.ball.rotation += this.ball.vz * 0.04;
+
+                    // Gutter drop detection
+                    const halfLane = this.LANE_WIDTH / 2 - 10;
+                    if (!this.ball.inGutter && (this.ball.x < -halfLane || this.ball.x > halfLane)) {
+                        this.ball.inGutter = true;
+                        audio.stopRoll();
+                        audio.playGutterThud();
+                        if (this.ball.x < -halfLane) this.ball.x = -halfLane - 14;
+                        if (this.ball.x > halfLane) this.ball.x = halfLane + 14;
+                        this.ball.vx = 0;
+                    }
+
+                    // Ball-to-Pin Collisions
+                    if (!this.ball.inGutter) {
+                        this.pins.forEach(pin => {
+                            if (pin.removed || pin.isKnocked) return;
+
+                            const dx = pin.x - this.ball.x;
+                            const dz = pin.z - this.ball.z;
+                            const dist = Math.hypot(dx, dz);
+
+                            if (dist < this.ball.radius + pin.radius) {
+                                pin.isKnocked = true;
+                                const speed = Math.hypot(this.ball.vx, this.ball.vz);
+                                audio.playPinHit(speed / 18);
+
+                                const angle = Math.atan2(dz, dx);
+                                pin.vx = Math.cos(angle) * speed * 0.65 + (Math.random() - 0.5) * 2;
+                                pin.vz = Math.sin(angle) * speed * 0.65 + Math.random() * 2;
+                                pin.vAngleX = (Math.random() - 0.5) * 0.35;
+                                pin.vAngleZ = (Math.random() - 0.5) * 0.35;
+
+                                this.ball.vz *= 0.82;
+                                this.ball.vx *= 0.85;
+                            }
+                        });
+                    }
+
+                    // End of lane bounds
+                    if (this.ball.z > this.LANE_LENGTH + 60) {
+                        this.ball.isRolling = false;
+                        audio.stopRoll();
+                        this.ball.settled = true;
+                    }
+                }
+
+                // Pin-to-Pin Collisions & Knocked Pin Motion
+                let pinsMoving = false;
+                for (let i = 0; i < this.pins.length; i++) {
+                    const pin = this.pins[i];
+                    if (pin.removed) continue;
+
+                    if (pin.isKnocked) {
+                        pin.x += pin.vx;
+                        pin.z += pin.vz;
+                        pin.angleX += pin.vAngleX;
+                        pin.angleZ += pin.vAngleZ;
+
+                        pin.vx *= 0.91;
+                        pin.vz *= 0.91;
+                        pin.vAngleX *= 0.88;
+                        pin.vAngleZ *= 0.88;
+
+                        if (Math.hypot(pin.vx, pin.vz) > 0.15) pinsMoving = true;
+
+                        for (let j = i + 1; j < this.pins.length; j++) {
+                            const other = this.pins[j];
+                            if (other.removed) continue;
+
+                            const dx = other.x - pin.x;
+                            const dz = other.z - pin.z;
+                            const dist = Math.hypot(dx, dz);
+
+                            if (dist < pin.radius * 2.1) {
+                                if (!other.isKnocked) {
+                                    other.isKnocked = true;
+                                    audio.playPinHit(0.55);
+                                }
+                                const angle = Math.atan2(dz, dx);
+                                const force = (Math.hypot(pin.vx, pin.vz) + 1.5) * 0.45;
+                                other.vx += Math.cos(angle) * force;
+                                other.vz += Math.sin(angle) * force;
+                                other.vAngleX = (Math.random() - 0.5) * 0.3;
+                                other.vAngleZ = (Math.random() - 0.5) * 0.3;
+                            }
+                        }
+                    }
+                }
+
+                // Turn Evaluation Trigger
+                if (this.phase === 4 && this.ball.settled && !pinsMoving) {
+                    this.phase = 5;
+                    setTimeout(() => this.evaluateTurn(), 350);
+                }
+
+                // Particles
+                this.particles.forEach((p, idx) => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.alpha -= 0.025;
+                    if (p.alpha <= 0) this.particles.splice(idx, 1);
+                });
+            }
+
+            render() {
+                this.ctx.clearRect(0, 0, this.W, this.H);
+
+                // Alley Background
+                const bg = this.ctx.createLinearGradient(0, 0, 0, this.H);
+                bg.addColorStop(0, '#090d16');
+                bg.addColorStop(0.4, '#0f172a');
+                bg.addColorStop(1, '#020617');
+                this.ctx.fillStyle = bg;
+                this.ctx.fillRect(0, 0, this.W, this.H);
+
+                // Pit Pit Mask Wall
+                const bwFarLeft = this.project(-200, 160, this.LANE_LENGTH + 80);
+                const bwFarRight = this.project(200, 160, this.LANE_LENGTH + 80);
+                const bwNearLeft = this.project(-200, 0, this.LANE_LENGTH + 80);
+                const bwNearRight = this.project(200, 0, this.LANE_LENGTH + 80);
+
+                this.ctx.fillStyle = '#050b14';
+                this.ctx.beginPath();
+                this.ctx.moveTo(bwNearLeft.x, bwNearLeft.y);
+                this.ctx.lineTo(bwFarLeft.x, bwFarLeft.y);
+                this.ctx.lineTo(bwFarRight.x, bwFarRight.y);
+                this.ctx.lineTo(bwNearRight.x, bwNearRight.y);
+                this.ctx.fill();
+
+                // Draw Lane
+                this.drawLane();
+
+                // Draw Pins
+                this.drawPins();
+
+                // Draw Ball
+                this.drawBall();
+
+                // Draw Aiming Guide
+                if (this.phase < 4) {
+                    this.drawAimGuide();
+                }
+
+                // Draw Confetti Particles
+                this.drawParticles();
+            }
+
+            drawLane() {
+                const laneFarL = this.project(-this.LANE_WIDTH / 2, 0, this.LANE_LENGTH);
+                const laneFarR = this.project(this.LANE_WIDTH / 2, 0, this.LANE_LENGTH);
+                const laneNearL = this.project(-this.LANE_WIDTH / 2, 0, -50);
+                const laneNearR = this.project(this.LANE_WIDTH / 2, 0, -50);
+
+                const gutFarL = this.project(-this.LANE_WIDTH / 2 - this.GUTTER_WIDTH, 0, this.LANE_LENGTH);
+                const gutFarR = this.project(this.LANE_WIDTH / 2 + this.GUTTER_WIDTH, 0, this.LANE_LENGTH);
+                const gutNearL = this.project(-this.LANE_WIDTH / 2 - this.GUTTER_WIDTH, 0, -50);
+                const gutNearR = this.project(this.LANE_WIDTH / 2 + this.GUTTER_WIDTH, 0, -50);
+
+                // Gutters
+                this.ctx.fillStyle = '#0f172a';
+                this.ctx.beginPath();
+                this.ctx.moveTo(gutNearL.x, gutNearL.y);
+                this.ctx.lineTo(gutFarL.x, gutFarL.y);
+                this.ctx.lineTo(laneFarL.x, laneFarL.y);
+                this.ctx.lineTo(laneNearL.x, laneNearL.y);
+                this.ctx.fill();
+
+                this.ctx.beginPath();
+                this.ctx.moveTo(laneNearR.x, laneNearR.y);
+                this.ctx.lineTo(laneFarR.x, laneFarR.y);
+                this.ctx.lineTo(gutFarR.x, gutFarR.y);
+                this.ctx.lineTo(gutNearR.x, gutNearR.y);
+                this.ctx.fill();
+
+                // Wooden Lane Deck
+                const woodGrad = this.ctx.createLinearGradient(0, laneFarL.y, 0, laneNearL.y);
+                woodGrad.addColorStop(0, '#78350f');
+                woodGrad.addColorStop(0.5, '#b45309');
+                woodGrad.addColorStop(1, '#d97706');
+
+                this.ctx.fillStyle = woodGrad;
+                this.ctx.beginPath();
+                this.ctx.moveTo(laneNearL.x, laneNearL.y);
+                this.ctx.lineTo(laneFarL.x, laneFarL.y);
+                this.ctx.lineTo(laneFarR.x, laneFarR.y);
+                this.ctx.lineTo(laneNearR.x, laneNearR.y);
+                this.ctx.fill();
+
+                // Planks
+                this.ctx.strokeStyle = 'rgba(251, 191, 36, 0.16)';
+                this.ctx.lineWidth = 1;
+                for (let x = -this.LANE_WIDTH / 2 + 18; x < this.LANE_WIDTH / 2; x += 18) {
+                    const p1 = this.project(x, 0, -50);
+                    const p2 = this.project(x, 0, this.LANE_LENGTH);
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(p1.x, p1.y);
+                    this.ctx.lineTo(p2.x, p2.y);
+                    this.ctx.stroke();
+                }
+
+                // Target Arrows
+                const arrowZ = 300;
+                [-45, -22.5, 0, 22.5, 45].forEach(ax => {
+                    const tip = this.project(ax, 0, arrowZ + 28);
+                    const bL = this.project(ax - 4.5, 0, arrowZ);
+                    const bR = this.project(ax + 4.5, 0, arrowZ);
+
+                    this.ctx.fillStyle = 'rgba(120, 53, 15, 0.85)';
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(tip.x, tip.y);
+                    this.ctx.lineTo(bL.x, bL.y);
+                    this.ctx.lineTo(bR.x, bR.y);
+                    this.ctx.fill();
+                });
+
+                // Foul Line
+                const fL = this.project(-this.LANE_WIDTH / 2, 0, 0);
+                const fR = this.project(this.LANE_WIDTH / 2, 0, 0);
+                this.ctx.strokeStyle = '#ef4444';
+                this.ctx.lineWidth = 4;
+                this.ctx.beginPath();
+                this.ctx.moveTo(fL.x, fL.y);
+                this.ctx.lineTo(fR.x, fR.y);
+                this.ctx.stroke();
+            }
+
+            drawPins() {
+                const sortedPins = [...this.pins].sort((a, b) => b.z - a.z);
+
+                sortedPins.forEach(pin => {
+                    if (pin.removed) return;
+
+                    const p = this.project(pin.x, pin.y, pin.z);
+                    const r = pin.radius * p.scale;
+                    const h = pin.height * p.scale;
+
+                    this.ctx.save();
+                    this.ctx.translate(p.x, p.y);
+
+                    if (pin.isKnocked) {
+                        this.ctx.rotate(pin.angleZ);
+                    }
+
+                    // Shadow
+                    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+                    this.ctx.beginPath();
+                    this.ctx.ellipse(0, 0, r * 1.2, r * 0.35, 0, 0, Math.PI * 2);
+                    this.ctx.fill();
+
+                    // Pin Body
+                    const pinGrad = this.ctx.createLinearGradient(-r, 0, r, 0);
+                    pinGrad.addColorStop(0, '#cbd5e1');
+                    pinGrad.addColorStop(0.3, '#ffffff');
+                    pinGrad.addColorStop(0.75, '#f1f5f9');
+                    pinGrad.addColorStop(1, '#94a3b8');
+
+                    this.ctx.fillStyle = pinGrad;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(-r * 0.6, 0);
+                    this.ctx.quadraticCurveTo(-r * 1.1, -h * 0.35, -r * 0.45, -h * 0.65);
+                    this.ctx.quadraticCurveTo(-r * 0.3, -h * 0.82, -r * 0.4, -h * 0.88);
+                    this.ctx.arc(0, -h * 0.9, r * 0.4, Math.PI, 0, false);
+                    this.ctx.quadraticCurveTo(r * 0.3, -h * 0.82, r * 0.45, -h * 0.65);
+                    this.ctx.quadraticCurveTo(r * 1.1, -h * 0.35, r * 0.6, 0);
+                    this.ctx.closePath();
+                    this.ctx.fill();
+
+                    // Red Neck Bands
+                    this.ctx.fillStyle = '#dc2626';
+                    this.ctx.fillRect(-r * 0.38, -h * 0.76, r * 0.76, h * 0.05);
+                    this.ctx.fillRect(-r * 0.42, -h * 0.68, r * 0.84, h * 0.04);
+
+                    this.ctx.restore();
+                });
+            }
+
+            drawPinsetterMachine() {
+                const ps = this.pinsetter;
+
+                // Sweeper Rake Bar
+                if (ps.mode === 'SWEEP_KNOCKED' || (ps.mode === 'FULL_RESET' && ps.stage <= 2)) {
+                    const pL = this.project(-this.LANE_WIDTH / 2 - 18, 18, ps.rakeZ);
+                    const pR = this.project(this.LANE_WIDTH / 2 + 18, 18, ps.rakeZ);
+
+                    this.ctx.strokeStyle = '#f59e0b';
+                    this.ctx.lineWidth = 6 * pL.scale;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(pL.x, pL.y);
+                    this.ctx.lineTo(pR.x, pR.y);
+                    this.ctx.stroke();
+                }
+
+                // Mechanical Rack Lowering 10 Pins
+                if (ps.mode === 'FULL_RESET' && ps.stage >= 3) {
+                    const rackZ = 830;
+                    const pCenter = this.project(0, ps.rackY, rackZ);
+
+                    this.ctx.save();
+                    this.ctx.translate(pCenter.x, pCenter.y);
+
+                    const rW = 90 * pCenter.scale;
+                    const rH = 20 * pCenter.scale;
+
+                    this.ctx.fillStyle = '#475569';
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(-rW / 2, -rH);
+                    this.ctx.lineTo(rW / 2, -rH);
+                    this.ctx.lineTo(0, rH);
+                    this.ctx.closePath();
+                    this.ctx.fill();
+                    this.ctx.strokeStyle = '#94a3b8';
+                    this.ctx.lineWidth = 2;
+                    this.ctx.stroke();
+
+                    // Pins in rack
+                    if (ps.stage <= 4) {
+                        const offsets = [
+                            [0, rH * 0.4],
+                            [-rW * 0.2, 0], [rW * 0.2, 0],
+                            [-rW * 0.35, -rH * 0.4], [0, -rH * 0.4], [rW * 0.35, -rH * 0.4]
+                        ];
+                        this.ctx.fillStyle = '#ffffff';
+                        offsets.forEach(off => {
+                            this.ctx.beginPath();
+                            this.ctx.arc(off[0], off[1], 4 * pCenter.scale, 0, Math.PI * 2);
+                            this.ctx.fill();
+                        });
+                    }
+
+                    this.ctx.restore();
+                }
+            }
+
+            drawBall() {
+                const p = this.project(this.ball.x, this.ball.y, this.ball.z);
+                const r = this.ball.radius * p.scale;
+
+                this.ctx.save();
+                this.ctx.translate(p.x, p.y);
+
+                // Ball Shadow
+                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+                this.ctx.beginPath();
+                this.ctx.ellipse(0, r * 0.6, r * 0.85, r * 0.28, 0, 0, Math.PI * 2);
+                this.ctx.fill();
+
+                // Ball Gradient
+                const ballGrad = this.ctx.createRadialGradient(
+                    -r * 0.3, -r * 0.3, r * 0.08,
+                    0, 0, r
+                );
+                ballGrad.addColorStop(0, '#ffffff');
+                ballGrad.addColorStop(0.2, this.ballColor);
+                ballGrad.addColorStop(0.85, this.adjustColor(this.ballColor, -50));
+                ballGrad.addColorStop(1, '#020617');
+
+                this.ctx.fillStyle = ballGrad;
+                this.ctx.beginPath();
+                this.ctx.arc(0, 0, r, 0, Math.PI * 2);
+                this.ctx.fill();
+
+                // Finger Holes
+                this.ctx.rotate(this.ball.rotation);
+                this.ctx.fillStyle = '#0f172a';
+                [-r * 0.28, 0, r * 0.28].forEach((hx, idx) => {
+                    const hy = (idx === 1) ? -r * 0.28 : r * 0.12;
+                    this.ctx.beginPath();
+                    this.ctx.arc(hx, hy, r * 0.11, 0, Math.PI * 2);
+                    this.ctx.fill();
+                });
+
+                this.ctx.restore();
+            }
+
+            drawAimGuide() {
+                const ballP = this.project(this.ball.x, this.ball.y, this.ball.z);
+                const length = 240;
+                const targetX = this.ball.x + Math.sin(this.aimAngle) * length;
+                const targetZ = this.ball.z + Math.cos(this.aimAngle) * length;
+                const targetP = this.project(targetX, 0, targetZ);
+
+                this.ctx.save();
+                this.ctx.strokeStyle = '#f59e0b';
+                this.ctx.lineWidth = 2.5;
+                this.ctx.setLineDash([7, 5]);
+
+                this.ctx.beginPath();
+                this.ctx.moveTo(ballP.x, ballP.y);
+                this.ctx.lineTo(targetP.x, targetP.y);
+                this.ctx.stroke();
+
+                this.ctx.setLineDash([]);
+                this.ctx.fillStyle = 'rgba(245, 158, 11, 0.35)';
+                this.ctx.beginPath();
+                this.ctx.arc(targetP.x, targetP.y, 12 * targetP.scale, 0, Math.PI * 2);
+                this.ctx.fill();
+                this.ctx.stroke();
+
+                this.ctx.restore();
+            }
+
+            drawParticles() {
+                this.cCtx.clearRect(0, 0, this.W, this.H);
+                this.particles.forEach(p => {
+                    this.cCtx.save();
+                    this.cCtx.globalAlpha = p.alpha;
+                    this.cCtx.fillStyle = p.color;
+                    this.cCtx.beginPath();
+                    this.cCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    this.cCtx.fill();
+                    this.cCtx.restore();
+                });
+            }
+
+            spawnConfetti() {
+                const colors = ['#f59e0b', '#3b82f6', '#10b981', '#ef4444', '#ec4899', '#8b5cf6'];
+                for (let i = 0; i < 80; i++) {
+                    this.particles.push({
+                        x: this.W / 2,
+                        y: this.H * 0.35,
+                        vx: (Math.random() - 0.5) * 14,
+                        vy: (Math.random() - 0.75) * 12,
+                        size: Math.random() * 5 + 3,
+                        color: colors[Math.floor(Math.random() * colors.length)],
+                        alpha: 1.0
+                    });
+                }
+            }
+
+            launchBall() {
+                if (this.phase >= 4) return;
+                this.phase = 4;
+
+                const speed = 12 + (this.powerVal / 100) * 16;
+                this.ball.vz = Math.cos(this.aimAngle) * speed;
+                this.ball.vx = Math.sin(this.aimAngle) * speed;
+                this.ball.isRolling = true;
+
+                audio.startRoll();
+            }
+
+            evaluateTurn() {
+                const player = this.players[this.activePlayerIdx];
+                const frameBefore = player.currentFrameIdx;
+                const isFrame10 = (frameBefore === 9);
+                const rollNum = player.getCurrentFrame().rolls.length + 1;
+
+                let newlyKnocked = 0;
+                this.pins.forEach(pin => {
+                    if (!pin.removed && pin.isKnocked) newlyKnocked++;
+                });
+
+                let title = `${newlyKnocked} BOLOS`;
+                let sub = "¡Buen tiro!";
+
+                if (newlyKnocked === 10 && rollNum === 1) {
+                    title = "¡STRIKE!";
+                    sub = "¡Pleno perfecto en el primer tiro!";
+                    audio.playStrikeFanfare();
+                    this.spawnConfetti();
+                } else if (rollNum > 1 && (player.getCurrentFrame().rolls[0] + newlyKnocked === 10) && !player.getCurrentFrame().isStrike) {
+                    title = "¡SPARE!";
+                    sub = "¡Semi-pleno conseguido!";
+                    audio.playSpareFanfare();
+                    this.spawnConfetti();
+                } else if (newlyKnocked === 0) {
+                    title = "¡CANALETA!";
+                    sub = "Sin puntos en esta tirada";
+                }
+
+                showAnnouncement(title, sub);
+                
+                // Record score and check if frame advances
+                player.recordRoll(newlyKnocked);
+                updateScorecardUI();
+
+                const frameAfter = player.currentFrameIdx;
+                const frameObj = player.frames[9]; // Frame 10 reference
+
+                // STRICT RULE: Wait 2 seconds after ball passes pins
+                setTimeout(() => {
+                    hideAnnouncement();
+
+                    if (player.isFinished && this.isAllFinished()) {
+                        showWinnerModal();
+                        return;
+                    }
+
+                    let isFullReset = false;
+                    let switchPlayer = false;
+
+                    if (!isFrame10) {
+                        // Frame 1-9 logic
+                        if (frameAfter > frameBefore) {
+                            // Frame advanced -> Next Frame / Next Turn -> 10 New Pins
+                            isFullReset = true;
+                            switchPlayer = true;
+                        } else {
+                            // Roll 1 completed, < 10 pins -> Only remove knocked pins
+                            isFullReset = false;
+                        }
+                    } else {
+                        // Frame 10 logic
+                        const currentRolls = frameObj.rolls.length;
+                        const r1 = frameObj.rolls[0] || 0;
+                        const r2 = frameObj.rolls[1] || 0;
+
+                        if (currentRolls === 1 && r1 === 10) {
+                            isFullReset = true; // Strike on 1st shot
+                        } else if (currentRolls === 2 && (r1 + r2 === 10 || r2 === 10)) {
+                            isFullReset = true; // Spare or 2nd Strike
+                        } else if (player.isFinished) {
+                            isFullReset = true; 
+                            switchPlayer = true;
+                        } else {
+                            isFullReset = false;
+                        }
+                    }
+
+                    // Explicit UI Message
+                    if (isFullReset) {
+                        updatePinsetterStatusBadge("Colocando 10 bolos nuevos...", "amber");
+                    } else {
+                        updatePinsetterStatusBadge("Limpiando bolos caídos...", "amber");
+                    }
+
+                    // Execute the deterministic state machine reset
+                    this.resetPins(isFullReset);
+
+                    if (switchPlayer && this.players.length > 1 && !this.isAllFinished()) {
+                        this.activePlayerIdx = (this.activePlayerIdx + 1) % this.players.length;
+                        this.resetPins(true); // Enforce 10 pins for the next player
+                        updatePinsetterStatusBadge("Colocando 10 bolos nuevos...", "amber");
+                    }
+
+                    setTimeout(() => {
+                        this.resetBall();
+                        updateScorecardUI();
+                        const standingCount = this.pins.filter(p => !p.removed && !p.isKnocked).length;
+                        updatePinsetterStatusBadge(`Elevador: Listo (${standingCount} Bolos)`, "emerald");
+                    }, 1000);
+
+                }, 2000); // 2 second delay strictly implemented
+            }
+
+            isAllFinished() {
+                return this.players.every(p => p.isFinished);
+            }
+
+            adjustColor(hex, amount) {
+                let usePound = false;
+                if (hex[0] === "#") {
+                    hex = hex.slice(1);
+                    usePound = true;
+                }
+                let num = parseInt(hex, 16);
+                let r = (num >> 16) + amount;
+                if (r > 255) r = 255; else if (r < 0) r = 0;
+                let b = ((num >> 8) & 0x00FF) + amount;
+                if (b > 255) b = 255; else if (b < 0) b = 0;
+                let g = (num & 0x0000FF) + amount;
+                if (g > 255) g = 255; else if (g < 0) g = 0;
+                return (usePound ? "#" : "") + (g | (b << 8) | (r << 16)).toString(16);
+            }
+        }
+    </script>
+
+    <!-- App Initialization & UI Controllers -->
+    <script>
+        let game = null;
+
+        const btnPrimaryAction = document.getElementById('btnPrimaryAction');
+        const stepBadge = document.getElementById('stepBadge');
+        const stepText = document.getElementById('stepText');
+
+        const boxPosition = document.getElementById('boxPosition');
+        const boxAnglePower = document.getElementById('boxAnglePower');
+        const boxSpin = document.getElementById('boxSpin');
+
+        const sliderPos = document.getElementById('sliderPos');
+        const barAngle = document.getElementById('barAngle');
+        const txtAngle = document.getElementById('txtAngle');
+        const barPower = document.getElementById('barPower');
+        const txtPower = document.getElementById('txtPower');
+        const sliderSpin = document.getElementById('sliderSpin');
+        const txtSpin = document.getElementById('txtSpin');
+
+        window.onload = function () {
+            const canvas = document.getElementById('bowlingCanvas');
+            const confettiCanvas = document.getElementById('confettiCanvas');
+
+            game = new BowlingEngine(canvas, confettiCanvas);
+
+            setupEventListeners();
+            updateScorecardUI();
+
+            function gameLoop() {
+                game.updatePhysics();
+                game.render();
+                updateControlUI();
+                requestAnimationFrame(gameLoop);
+            }
+
+            gameLoop();
+        };
+
+        function setupEventListeners() {
+            // Slider position
+            sliderPos.addEventListener('input', (e) => {
+                if (game.phase === 0) game.ball.x = parseFloat(e.target.value);
+            });
+
+            // Slider spin/hook
+            sliderSpin.addEventListener('input', (e) => {
+                game.ball.spin = parseFloat(e.target.value);
+                const val = game.ball.spin;
+                if (val === 0) txtSpin.innerText = 'Sin efecto (0)';
+                else if (val < 0) txtSpin.innerText = `Efecto Izquierda (${val})`;
+                else txtSpin.innerText = `Efecto Derecha (+${val})`;
+            });
+
+            // Manual Pin Reset Button
+            document.getElementById('btnManualReset').addEventListener('click', () => {
+                if (game && game.phase < 4) {
+                    game.triggerManualReset();
+                }
+            });
+
+            // Main Action Button (Shoot Step Machine)
+            btnPrimaryAction.addEventListener('click', () => {
+                if (game.phase >= 4) return;
+
+                audio.playClick();
+
+                if (game.phase === 0) {
+                    game.phase = 1;
+                    stepBadge.innerText = '2';
+                    stepText.innerText = 'Fija el Ángulo de Tiro';
+                    btnPrimaryAction.innerText = 'Fijar Ángulo';
+                    boxPosition.classList.add('hidden');
+                    boxAnglePower.classList.remove('hidden');
+                } else if (game.phase === 1) {
+                    game.phase = 2;
+                    stepBadge.innerText = '3';
+                    stepText.innerText = 'Fija la Potencia de Tiro';
+                    btnPrimaryAction.innerText = 'Fijar Potencia';
+                } else if (game.phase === 2) {
+                    game.phase = 3;
+                    stepBadge.innerText = '4';
+                    stepText.innerText = 'Ajusta Efecto y Lanza';
+                    btnPrimaryAction.innerText = '¡LANZAR BOLA!';
+                    btnPrimaryAction.classList.remove('from-amber-500', 'to-orange-600');
+                    btnPrimaryAction.classList.add('from-red-600', 'to-amber-500');
+                    boxSpin.classList.remove('hidden');
+                } else if (game.phase === 3) {
+                    game.launchBall();
+                    btnPrimaryAction.disabled = true;
+                    btnPrimaryAction.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+            });
+
+            // Modals
+            document.getElementById('btnSettings').addEventListener('click', () => {
+                audio.playClick();
+                document.getElementById('modalSettings').classList.remove('hidden');
+            });
+            document.getElementById('btnHelp').addEventListener('click', () => {
+                audio.playClick();
+                document.getElementById('modalHelp').classList.remove('hidden');
+            });
+            document.querySelectorAll('.btnCloseModal').forEach(b => {
+                b.addEventListener('click', () => {
+                    audio.playClick();
+                    document.getElementById('modalSettings').classList.add('hidden');
+                    document.getElementById('modalHelp').classList.add('hidden');
+                });
+            });
+
+            // Sound Toggle
+            document.getElementById('btnSoundToggle').addEventListener('click', () => {
+                audio.muted = !audio.muted;
+                const icon = document.getElementById('soundIcon');
+                icon.className = audio.muted ? 'fa-solid fa-volume-xmark text-red-400' : 'fa-solid fa-volume-high text-amber-400';
+            });
+
+            // Restart Game
+            document.getElementById('btnRestart').addEventListener('click', () => {
+                audio.playClick();
+                hideAnnouncement(); // Ocultamos explícitamente el anuncio de fin de partida
+                game.players.forEach(p => p.reset());
+                game.activePlayerIdx = 0;
+                game.resetPins(true);
+                game.resetBall();
+                updateScorecardUI();
+                updatePinsetterStatusBadge("Elevador: Listo (10 Bolos)", "emerald");
+            });
+
+            // 1P / 2P Modes
+            const btn1P = document.getElementById('btnMode1P');
+            const btn2P = document.getElementById('btnMode2P');
+            const p2Group = document.getElementById('p2Group');
+
+            btn1P.addEventListener('click', () => {
+                btn1P.className = 'py-2 px-3 rounded-xl border border-amber-500/50 bg-amber-500/10 text-amber-400 font-bold text-xs flex items-center justify-center gap-2';
+                btn2P.className = 'py-2 px-3 rounded-xl border border-slate-700 bg-slate-800 text-slate-400 font-bold text-xs flex items-center justify-center gap-2';
+                p2Group.classList.add('hidden');
+            });
+            btn2P.addEventListener('click', () => {
+                btn2P.className = 'py-2 px-3 rounded-xl border border-amber-500/50 bg-amber-500/10 text-amber-400 font-bold text-xs flex items-center justify-center gap-2';
+                btn1P.className = 'py-2 px-3 rounded-xl border border-slate-700 bg-slate-800 text-slate-400 font-bold text-xs flex items-center justify-center gap-2';
+                p2Group.classList.remove('hidden');
+            });
+
+            // Color Picker
+            document.querySelectorAll('#colorPicker button').forEach(b => {
+                b.addEventListener('click', (e) => {
+                    document.querySelectorAll('#colorPicker button').forEach(x => x.classList.remove('ring-2', 'ring-amber-400'));
+                    e.currentTarget.classList.add('ring-2', 'ring-amber-400');
+                    game.ballColor = e.currentTarget.getAttribute('data-color');
+                });
+            });
+
+            // Apply Settings
+            document.getElementById('btnApplySettings').addEventListener('click', () => {
+                audio.playClick();
+                hideAnnouncement(); // Ocultamos el anuncio al iniciar nueva partida
+                const p1 = document.getElementById('inputP1').value.trim() || 'Jugador 1';
+                const p2 = document.getElementById('inputP2').value.trim() || 'Jugador 2';
+                const is2P = !p2Group.classList.contains('hidden');
+
+                game.players = [new Scorecard(p1)];
+                if (is2P) game.players.push(new Scorecard(p2));
+
+                game.activePlayerIdx = 0;
+                game.resetPins(true);
+                game.resetBall();
+                updateScorecardUI();
+                document.getElementById('modalSettings').classList.add('hidden');
+            });
+        }
+
+        function updateControlUI() {
+            if (!game) return;
+
+            const anglePct = ((game.aimAngle + 0.25) / 0.5) * 100;
+            barAngle.style.width = `${anglePct}%`;
+            txtAngle.innerText = `${Math.round((game.aimAngle * 180) / Math.PI)}°`;
+
+            barPower.style.width = `${game.powerVal}%`;
+            txtPower.innerText = `${Math.round(game.powerVal)}%`;
+
+            if (game.phase === 0) {
+                stepBadge.innerText = '1';
+                stepText.innerText = 'Ajusta la Posición Inicial';
+                btnPrimaryAction.innerText = 'Fijar Posición';
+                btnPrimaryAction.disabled = (game.phase >= 4);
+                if (btnPrimaryAction.disabled) {
+                    btnPrimaryAction.classList.add('opacity-50', 'cursor-not-allowed');
+                } else {
+                    btnPrimaryAction.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+                btnPrimaryAction.className = 'px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 active:scale-95 text-slate-950 font-black rounded-lg text-xs sm:text-sm uppercase tracking-wider shadow-lg shadow-amber-500/25 transition-all';
+                boxPosition.classList.remove('hidden');
+                boxAnglePower.classList.add('hidden');
+                boxSpin.classList.add('hidden');
+                sliderPos.value = game.ball.x;
+                sliderSpin.value = 0;
+                txtSpin.innerText = 'Sin efecto (0)';
+            }
+        }
+
+        function updatePinsetterStatusBadge(text, color) {
+            const badgeText = document.getElementById('pinsetterStatusText');
+            const badgeDot = document.getElementById('pinsetterDot');
+
+            badgeText.innerText = text;
+            if (color === "amber") {
+                badgeDot.className = "w-2 h-2 rounded-full bg-amber-400 animate-pulse";
+            } else {
+                badgeDot.className = "w-2 h-2 rounded-full bg-emerald-400";
+            }
+        }
+
+        function updateScorecardUI() {
+            if (!game) return;
+
+            const table = document.getElementById('scorecardTable');
+            table.innerHTML = '';
+
+            const active = game.players[game.activePlayerIdx];
+            document.getElementById('turnText').innerText = `Turno: ${active.name}`;
+            document.getElementById('frameNumber').innerText = active.currentFrameIdx + 1;
+
+            const currRollNum = active.getCurrentFrame().rolls.length + 1;
+            document.getElementById('shotNumber').innerText = currRollNum;
+
+            game.players.forEach((p, idx) => {
+                const isActive = idx === game.activePlayerIdx;
+                const row = document.createElement('div');
+                row.className = `flex items-center rounded-xl p-2 transition-all ${isActive ? 'bg-slate-800 border border-amber-500/50 shadow-md' : 'bg-slate-900/50 opacity-70'}`;
+
+                let html = `
+                    <div class="w-28 flex flex-col pr-2">
+                        <span class="text-xs font-extrabold ${isActive ? 'text-amber-400' : 'text-slate-300'} truncate">${p.name}</span>
+                        <span class="text-xs font-black text-slate-400">Total: <span class="text-white text-sm">${p.totalScore}</span></span>
+                    </div>
+                    <div class="flex-1 grid grid-cols-10 gap-1 text-center">
+                `;
+
+                p.frames.forEach((f, fIdx) => {
+                    const isCurr = isActive && fIdx === p.currentFrameIdx;
+                    let r1 = f.rolls[0] !== undefined ? (f.rolls[0] === 10 ? 'X' : (f.rolls[0] === 0 ? '-' : f.rolls[0])) : '';
+                    let r2 = f.rolls[1] !== undefined ? (f.isSpare ? '/' : (f.rolls[1] === 10 ? 'X' : (f.rolls[1] === 0 ? '-' : f.rolls[1]))) : '';
+                    let r3 = f.rolls[2] !== undefined ? (f.rolls[2] === 10 ? 'X' : (f.rolls[2] === 0 ? '-' : f.rolls[2])) : '';
+
+                    html += `
+                        <div class="bg-slate-950 rounded-lg p-1 border ${isCurr ? 'border-amber-400' : 'border-slate-800'} flex flex-col justify-between h-11">
+                            <div class="text-[9px] font-bold text-slate-500 border-b border-slate-800">${fIdx + 1}</div>
+                            <div class="flex justify-around text-xs font-extrabold text-amber-300">
+                                <span>${r1}</span>
+                                <span>${r2}</span>
+                                ${fIdx === 9 ? `<span>${r3}</span>` : ''}
+                            </div>
+                            <div class="text-[11px] font-black text-white">${f.score !== null ? f.score : ''}</div>
+                        </div>
+                    `;
+                });
+
+                html += `</div>`;
+                row.innerHTML = html;
+                table.appendChild(row);
+            });
+        }
+
+        function showAnnouncement(title, sub) {
+            const overlay = document.getElementById('bannerOverlay');
+            document.getElementById('bannerTitle').innerText = title;
+            document.getElementById('bannerSub').innerText = sub;
+            overlay.classList.remove('hidden');
+        }
+
+        function hideAnnouncement() {
+            document.getElementById('bannerOverlay').classList.add('hidden');
+        }
+
+        function showWinnerModal() {
+            let winner = game.players[0];
+            game.players.forEach(p => {
+                if (p.totalScore > winner.totalScore) winner = p;
+            });
+
+            showAnnouncement(
+                "¡PARTIDA FINALIZADA!",
+                `Ganador: ${winner.name} con ${winner.totalScore} Puntos`
+            );
+        }
+    </script>
+</body>
+</html>
